@@ -3,16 +3,15 @@
 echo "Updating Repositories and Installing Needed Applications"
 
 DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
-VER_NUM=`cat /etc/os-release | grep VERSION_ID | cut -d '"' -f 2`
 
 if [ "$DISTRO_FAM" = debian ];then
 
 	sudo apt update 
 	sudo apt install lldpd mutt nmap 
 
-elif [ "$DISTRO_FAM" = 'redhat fedora' ];then
-
-	sudo yum install lldpd mutt nmap
+#elif [ "$DISTRO_FAM" = 'redhat fedora' ];then
+#
+#	sudo yum install lldpd mutt nmap
 
 else 
 
@@ -84,15 +83,15 @@ fi
 
 #Install Script
 
-if [ ! -f /bin/net-info.sh ]; then
+if [ ! -f ~/bin/net-info.sh ]; then
 
 	echo "Installing Discovery Script"
 
-	cp ./net-info.sh /bin/net-info.sh
+	cp ./net-info.sh ~/bin/net-info.sh
 
 else
 
-	echo "ERROR: Cannot Install Script, File Exists"
+	echo "ERROR: File Exists, Possible Previous Version or Alternative Script/Program, please check ~/bin/net-info.sh"
 
 fi
 
