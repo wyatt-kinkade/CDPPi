@@ -6,8 +6,8 @@ DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
 
 if [ "$DISTRO_FAM" = debian ];then
 
-	sudo apt update 
-	sudo apt install lldpd mutt nmap 
+	sudo apt update -y
+	sudo apt install lldpd mutt nmap -y 
 
 #elif [ "$DISTRO_FAM" = 'redhat fedora' ];then
 #
@@ -33,19 +33,21 @@ if [ ! -f ~/.muttrc ]; then
 
 	echo 'Configuring .muttrc, Further Information is needed'
 
-	read -p 'E-Mail Address' MAIL_ACCT
+	read -p 'E-Mail Address: ' MAIL_ACCT
 
-	read -p 'Friendly Mail Name (Bob Smith Raspberry Pi)' MAIL_ALIAS
+	read -p 'Friendly Mail Name (Bob Smith Raspberry Pi): ' MAIL_ALIAS
 
-	read -p 'Enter Password' -s MAIL_PW 
+	read -p 'Enter Password: ' -s MAIL_PW 
 
-	read -p 'SMTP Server Address' SMTP_SRV
+	echo " "
 
-	read -p 'SMTP Port Number (Typically 587)' SMTP_PORT
+	read -p 'SMTP Server Address: ' SMTP_SRV
 
-	read -p 'IMAP Server Address' IMAP_SRV
+	read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
 
-	read -p 'IMAP Port Number (Typically 993)' IMAP_PORT
+	read -p 'IMAP Server Address: ' IMAP_SRV
+
+	read -p 'IMAP Port Number (Typically 993): ' IMAP_PORT
 
 	echo '
 	set from = "'$MAIL_ACCT'"
@@ -73,7 +75,7 @@ if [ ! -f ~/.muttrc ]; then
 	
 	# GnuPG bootstrap
 	# source ~/.mutt/gpg.rc
-	' # >> ~/.muttrc
+	'  >> ~/.muttrc
 
 else
 
@@ -83,7 +85,7 @@ fi
 
 #Install Script
 
-if [ ! -d ~/bin/]; then
+if [ ! -d ~/bin/ ]; then
 
 	mkdir ~/bin/
 
