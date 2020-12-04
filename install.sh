@@ -83,12 +83,21 @@ fi
 
 #Install Script
 
+if [ ! -d ~/bin/]; then
+
+	mkdir ~/bin/
+
+fi
+
 if [ ! -f ~/bin/net-info.sh ]; then
 
 	echo "Installing Discovery Script"
 
 	cp ./net-info.sh ~/bin/net-info.sh
 
+	echo '" | mutt -s "Network Configuration" '$MAIL_ACCT'' >> ~/bin/net-info.sh
+
+	`chmod +x ~/bin/net-info.sh`
 else
 
 	echo "ERROR: File Exists, Possible Previous Version or Alternative Script/Program, please check ~/bin/net-info.sh"
