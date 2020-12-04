@@ -117,7 +117,7 @@ if [ ! -v $CRON ]; then
 	#echo new cron into cron file
 	echo "@reboot /bin/bash net-info.sh" >> ./mycron
 	#install new cron file
-	crontab ./mycron
+	cat ./mycron | crontab -
 	rm ./mycron
 
 else
