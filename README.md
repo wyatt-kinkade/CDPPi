@@ -8,8 +8,8 @@ Just a simple set of scripts to install and configure CDPPi.
 # Installation
 
 ```
-git clone https://github.com/wyatt-kinkade/CDPi.git
-cd CDPi/
+git clone https://github.com/wyatt-kinkade/CDPPi.git
+cd CDPPi/
 chmod +x .install.sh
 ```
 
