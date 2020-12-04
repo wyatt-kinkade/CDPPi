@@ -91,31 +91,31 @@ if [ ! -d ~/bin/ ]; then
 
 fi
 
-if [ ! -f ~/bin/net-info.sh ]; then
+if [ ! -f ~/bin/CDPPi.sh ]; then
 
 	echo "Installing Discovery Script"
 
-	cp ./net-info.sh ~/bin/net-info.sh
+	cp ./CDPPi.sh ~/bin/CDPPi.sh
 
-	echo '" | mutt -s "Network Configuration" '$MAIL_ACCT'' >> ~/bin/net-info.sh
+	echo '" | mutt -s "Network Configuration" '$MAIL_ACCT'' >> ~/bin/CDPPi.sh
 
-	`chmod +x ~/bin/net-info.sh`
+	`chmod +x ~/bin/CDPPi.sh`
 else
 
-	echo "ERROR: File Exists, Possible Previous Version or Alternative Script/Program, please check ~/bin/net-info.sh"
+	echo "ERROR: File Exists, Possible Previous Version or Alternative Script/Program, please check ~/bin/CDPPi.sh"
 
 fi
 
 #Install Cron entry if none exists
 
-CRON=`crontab -l | grep '@reboot /bin/bash net-info.sh'`
+CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 
-if [ ! -v $CRON = '@reboot /bin/bash net-info.sh' ]; then
+if [ ! -v $CRON = '@reboot /bin/bash CDPPi.sh' ]; then
 
 	#write out current crontab
 	crontab -l > ./mycron
 	#echo new cron into cron file
-	echo "@reboot /bin/bash net-info.sh" >> ./mycron
+	echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
 	#install new cron file
 	cat ./mycron | crontab -
 	rm ./mycron
