@@ -110,7 +110,7 @@ fi
 
 CRON=`crontab -l | grep '@reboot /bin/bash net-info.sh'`
 
-if [ ! -v $CRON ]; then
+if [ ! -v $CRON = '@reboot /bin/bash net-info.sh' ]; then
 
 	#write out current crontab
 	crontab -l > ./mycron
