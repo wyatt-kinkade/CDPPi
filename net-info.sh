@@ -24,4 +24,3 @@ Further DHCP Configuration information is
 
 $DHCPSVR
 
-" | mutt -s "Network Configuration" wyatt@wyattkinkade.com 
