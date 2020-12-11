@@ -24,3 +24,5 @@ Further DHCP Configuration information is
 
 $DHCPSVR
 
+" > /tmp/net-config
+
