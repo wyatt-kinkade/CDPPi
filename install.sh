@@ -10,11 +10,10 @@ read -p "Do you wish to send responses via slack API? (y/N) " SLACK_USE
 
 read -p "Is this installation for a Raspberry Pi? (y/n/Help) " RASPI
 
-if [ \( "$EMAIL_USE" = h \) -o \( "$EMAIL_USE" = help \) -o \( "$EMAIL_USE" = H \) -o \( "$EMAIL_USE" = Help \)]; then
+if [ \( "$RASPI" = h \) -o \( "$RASPI" = H \) ]; then
 
-	echo "Raspberry Pi Installs Trigger Script on boot \n Non-Raspberry Pi Installations Trigger Script on interface activation"
-
-	RASPI=Y
+	echo "Raspberry Pi Installs Trigger Script on boot 
+Non-Raspberry Pi Installations Trigger Script on interface activation"
 
 	read -p "Is this installation for a Raspberry Pi? (Y/n) " RASPI
 
@@ -24,33 +23,38 @@ echo "Updating Repositories and Installing Globally Needed Applications"
 
 DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
 
-if [ "$RASPI" = Y ]; then
+if [ -z "$DISTRO_FAM" ];then
+	DISTRO_FAM=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
+fi
 
-	if [ "$DISTRO_FAM" = debian ];then
+if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
+
+	if [ $DISTRO_FAM == "debian" ];then
 	
 		sudo apt update -y
 		sudo apt install lldpd nmap -y 
 	
 	else 
 	
-		echo 'Need to Configure Support for your Distribution'
+		echo 'Need to Configure Support for your Distribution 1'
 	
 	fi
 
 else
 
-        if [ "$DISTRO_FAM" = debian ];then
+        if [[ $DISTRO_FAM == "debian" ]];then
 
                 sudo apt update -y
                 sudo apt install lldpd nmap -y
 
-	elif [[ "$DISTRO_FAM" = "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
 
 		sudo yum install lldpd nmap -y
 
-        else
+	else
 
-                echo 'Need to Configure Support for your Distribution'
+		echo $DISTRO_FAM
+                echo 'Need to Configure Support for your Distribution 2'
 
         fi
 
@@ -64,45 +68,18 @@ sudo cp ./lldpd.service /lib/systemd/system/lldpd.service
 sudo systemctl daemon-reload
 sudo systemctl restart lldpd
 
-#Install Script
 
+#Install/Configure Mail Client
 
-if [ ! -f /bin/CDPPi.sh ]; then
+MUTT_RC=`sudo ls -al /root/.muttrc`
 
-	echo "Installing Discovery Script"
+if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
-	sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
-
-	if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \)]; then
-
-		sudo echo 'cat /tmp/net-config | mutt -s "Network Configuration" '$MAIL_ACCT'' >> /bin/CDPPi.sh
-
-	fi
-
-	if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \)]; then
-
-		sudo echo '"cat /tmp/net-config | /bin/netinfo-to-slack.py' >> /bin/CDPPi.sh 
-
-	fi
-
-	echo 'rm /tmp/net-config'
-
-	sudo chmod +x /bin/CDPPi.sh
-else
-
-	echo "ERROR: File Exists, Possible Previous Version or Alternative Script/Program, please check /bin/CDPPi.sh"
-
-fi
-
-#NEED SAFETY CHECK TO NOT MAKE MUTTRC IF ONE EXISTS
-
-if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \)]; then
-
-        if [ "$DISTRO_FAM" = debian ];then
+        if [[ $DISTRO_FAM == "debian" ]];then
 
                 sudo apt install mutt -y
 
-        elif [[ "$DISTRO_FAM" = "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
 
                 sudo yum install mutt -y
 
@@ -112,9 +89,9 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \)]; then
 
         fi
 
-	if [ ! -f /root/.muttrc ]; then
+	if [ -z "$MUTT_RC" ]; then
 	
-		sudo echo 'Configuring .muttrc, Further Information is needed'
+		echo 'Configuring .muttrc, Further Information is needed'
 	
 		read -p 'E-Mail Address: ' MAIL_ACCT
 	
@@ -134,7 +111,7 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \)]; then
 		
 		set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
 		set smtp_pass = "'$MAIL_PW'"
-		'  >> ~/.muttrc
+		'  >> /root/.muttrc
 	
 	else
 	
@@ -146,14 +123,14 @@ fi
 
 #NEED SAFETY CHECK TO NOT MAKE MUTTRC IF ONE EXISTS
 
-if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \)]; then
+if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 
-        if [ "$DISTRO_FAM" = debian ];then
+        if [[ $DISTRO_FAM == "debian" ]];then
 
                 sudo apt install python3 python3-pip gcc -y
                 sudo pip3 install slackclient
 
-        elif [[ "$DISTRO_FAM" = "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
 
                 sudo yum install python3 python3-pip gcc -y
 	        sudo pip3 install slackclient
@@ -164,32 +141,65 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \)]; then
 
         fi
 
-	read -p "Provide Slack Token: " SLACK_TOKEN
+	if [ ! -f /bin/netinfo-to-slack.py ]; then
 
-	read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
+		read -p "Provide Slack Token: " SLACK_TOKEN
+	
+		read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
+	
+		sudo echo '
+		#!/usr/bin/env python3
+	
+		import slack
+		import os
+		import sys
+	
+		SLACK_TOKEN='$SLACK_TOKEN'
+	
+		mystring = sys.stdin.read()
+		#mystring = ':dolphin:'
+	
+		client = slack.WebClient(token=SLACK_TOKEN)
+	
+		client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
+		' >> /bin/netinfo-to-slack.py 
+	
+		sudo chmod +x /bin/netinfo-to-slack.py
 
-	sudo echo '
-	#!/usr/bin/env python3
+	fi
+fi
 
-	import slack
-	import os
-	import sys
+#Install Script
 
-	SLACK_TOKEN='$SLACK_TOKEN'
+echo "Installing Discovery Script"
 
-	mystring = sys.stdin.read()
-	#mystring = ':dolphin:'
+sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
 
-	client = slack.WebClient(token=SLACK_TOKEN)
+if [ ! -z "$MUTT_RC" ]; then
 
-	client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
-	' >> /bin/netinfo-to-slack.py 
+	MAIL_ACCT=`sudo grep 'set from' /root/.muttrc | cut -d '"' -f 2`
+	
+fi
+
+if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
+
+	sudo echo 'cat /tmp/net-config | mutt -s Network Configuration '$MAIL_ACCT'' | sudo tee -a /bin/CDPPi.sh
 
 fi
 
+if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
+
+	sudo echo 'cat /tmp/net-config | /bin/netinfo-to-slack.py' | sudo tee -a /bin/CDPPi.sh 
+
+fi
+
+sudo echo 'rm /tmp/net-config' | sudo tee -a /bin/CDPPi.sh
+
+sudo chmod +x /bin/CDPPi.sh
+
 #Install Cron entry if none exists if Raspberry Pi
 
-if [ "$RASPI" = Y ]; then
+if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
 
 	CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 	
@@ -213,13 +223,13 @@ fi
 
 #Configure Network Manager Dispatcher
 
-if [ "$RASPI" = N ]; then
+if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
 
 	if [ "$DISTRO_FAM" = debian ];then
 
                 sudo apt install network-manager -y
-		sudo sed -i '' 's/^\([^#]\)/#\1/g' /etc/network/interfaces
-		sudo sed -i 's/false/true/g' /etc/
+		sudo sed -i 's/^\([^#].*\)/# \1/g' /etc/network/interfaces
+		sudo sed -i 's/false/true/g' /etc/NetworkManager/NetworkManager.conf
 		sudo systemctl restart NetworkManager
 
         elif [[ "$DISTRO_FAM" = "redhat fedora" ]];then
@@ -232,21 +242,20 @@ if [ "$RASPI" = N ]; then
 
         fi
 
-IF=`nmcli conn | grep ethernet | awk '{print $1;}'`
-
-sudo echo'#!/usr/bin/env bash
-
-interface=$1
-event=$2
-
-if [[ $interface != "'$IF'" ]] || [[ $event != "up" ]]
-then
-  return 0
-fi
-
-/bin/CDPPi.sh
-' >> /etc/NetworkManager/dispatcher.d/88-net-info
-
-sudo systemctl restart NetworkManager
+	IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
+	
+	sudo echo '#!/usr/bin/env bash
+	
+	interface=$1
+	event=$2
+	
+	if [[ $interface != "'$IF'" ]] || [[ $event != "up" ]]
+	then
+	  return 0
+	fi
+	
+	/bin/CDPPi.sh' | sudo tee /etc/NetworkManager/dispatcher.d/88-net-info
+	
+	sudo systemctl restart NetworkManager
 
 fi
