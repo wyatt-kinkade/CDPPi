@@ -3,6 +3,10 @@
 EMAIL_USE=N
 SLACK_USE=N
 RASPI=H
+IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
+DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
+MUTT_RC=`sudo ls -al /root/.muttrc`
+CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 
 read -p "Do you wish to send responses via email? (y/N) " EMAIL_USE
 
@@ -20,8 +24,6 @@ Non-Raspberry Pi Installations Trigger Script on interface activation"
 fi
 
 echo "Updating Repositories and Installing Globally Needed Applications"
-
-DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
 
 if [ -z "$DISTRO_FAM" ];then
 	DISTRO_FAM=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
@@ -42,12 +44,12 @@ if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
 
 else
 
-        if [[ $DISTRO_FAM == "debian" ]];then
+        if [[ $DISTRO_FAM = 'debian' ]];then
 
                 sudo apt update -y
                 sudo apt install lldpd nmap -y
 
-	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM =~ rhel ]];then
 
 		sudo yum install lldpd nmap -y
 
@@ -71,15 +73,13 @@ sudo systemctl restart lldpd
 
 #Install/Configure Mail Client
 
-MUTT_RC=`sudo ls -al /root/.muttrc`
-
 if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
         if [[ $DISTRO_FAM == "debian" ]];then
 
                 sudo apt install mutt -y
 
-	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM =~ rhel ]];then
 
                 sudo yum install mutt -y
 
@@ -89,9 +89,9 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
         fi
 
-	if [ -z "$MUTT_RC" ]; then
+	if [[ -z "$MUTT_RC" ]]; then
 	
-		echo 'Configuring .muttrc, Further Information is needed'
+		sudo echo 'Configuring .muttrc, Further Information is needed'
 	
 		read -p 'E-Mail Address: ' MAIL_ACCT
 	
@@ -105,13 +105,19 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 	
 		read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
 	
-		echo '
-		set from = "'$MAIL_ACCT'"
+		echo 'set from = "'$MAIL_ACCT'"
 		set realname = "'$MAIL_ALIAS'"
 		
 		set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
 		set smtp_pass = "'$MAIL_PW'"
-		'  >> /root/.muttrc
+		'  | sudo tee /root/.muttrc
+
+                echo 'set from = "'$MAIL_ACCT'"
+                set realname = "'$MAIL_ALIAS'"
+
+                set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
+                set smtp_pass = "'$MAIL_PW'"
+                ' | tee ~/.muttrc
 	
 	else
 	
@@ -130,7 +136,7 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
                 sudo apt install python3 python3-pip gcc -y
                 sudo pip3 install slackclient
 
-	elif [[ $DISTRO_FAM == "redhat fedora" ]];then
+		elif [[ $DISTRO_FAM =~ rhel ]];then
 
                 sudo yum install python3 python3-pip gcc -y
 	        sudo pip3 install slackclient
@@ -175,15 +181,11 @@ echo "Installing Discovery Script"
 
 sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
 
-if [ ! -z "$MUTT_RC" ]; then
-
-	MAIL_ACCT=`sudo grep 'set from' /root/.muttrc | cut -d '"' -f 2`
-	
-fi
-
 if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
-	sudo echo 'cat /tmp/net-config | mutt -s Network Configuration '$MAIL_ACCT'' | sudo tee -a /bin/CDPPi.sh
+	read -p "Email Account to Recieve E-Mail" REPT_ACCT
+
+	sudo echo 'cat /tmp/net-config | mutt -s Network Configuration '$REPT_ACCT'' | sudo tee -a /bin/CDPPi.sh
 
 fi
 
@@ -201,16 +203,14 @@ sudo chmod +x /bin/CDPPi.sh
 
 if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
 
-	CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
-	
 	if [ ! -v $CRON = '@reboot /bin/bash CDPPi.sh' ]; then
 	
 		#write out current crontab
-		crontab -l > ./mycron
+		sudo crontab -l > ./mycron
 		#echo new cron into cron file
-		echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
+		sudo echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
 		#install new cron file
-		sudo cat ./mycron | crontab -
+		sudo cat ./mycron | sudo crontab -
 		rm ./mycron
 	
 	else
@@ -232,7 +232,7 @@ if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
 		sudo sed -i 's/false/true/g' /etc/NetworkManager/NetworkManager.conf
 		sudo systemctl restart NetworkManager
 
-        elif [[ "$DISTRO_FAM" = "redhat fedora" ]];then
+	elif [[ $DISTRO_FAM =~ rhel ]];then
 
                 echo 'No need to Install Network Manager'
 
@@ -242,8 +242,6 @@ if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
 
         fi
 
-	IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
-	
 	sudo echo '#!/usr/bin/env bash
 	
 	interface=$1
@@ -254,8 +252,8 @@ if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
 	  return 0
 	fi
 	
-	/bin/CDPPi.sh' | sudo tee /etc/NetworkManager/dispatcher.d/88-net-info
-	
+	sleep 75 && /bin/CDPPi.sh' | sudo tee /etc/NetworkManager/dispatcher.d/88-net-info
+	sudo chmod +x /etc/NetworkManager/dispatcher.d/88-net-info
 	sudo systemctl restart NetworkManager
 
 fi
