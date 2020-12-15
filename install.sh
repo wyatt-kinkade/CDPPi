@@ -33,7 +33,7 @@ if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
 	if [ $DISTRO_FAM == "debian" ];then
 	
 		sudo apt update -y
-		sudo apt install lldpd nmap -y 
+		sudo apt install lldpd nmap curl -y 
 	
 	else 
 	
@@ -46,11 +46,11 @@ else
         if [[ $DISTRO_FAM = 'debian' ]];then
 
                 sudo apt update -y
-                sudo apt install lldpd nmap -y
+                sudo apt install lldpd nmap curl -y
 
 	elif [[ $DISTRO_FAM =~ rhel ]];then
 
-		sudo yum install lldpd nmap -y
+		sudo yum install lldpd nmap curl -y
 
 	else
 
@@ -152,7 +152,7 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 	
 		read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
 	
-sudo echo '#!/usr/bin/env python3
+sudo echo "#!/usr/bin/env python3
 
 import slack
 import os
@@ -166,7 +166,7 @@ mystring = sys.stdin.read()
 client = slack.WebClient(token=SLACK_TOKEN)
 
 client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
-' | sudo tee /bin/netinfo-to-slack.py 
+" | sudo tee /bin/netinfo-to-slack.py 
 	
 		sudo chmod +x /bin/netinfo-to-slack.py
 
@@ -183,7 +183,7 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
 	read -p "Email Account to Recieve E-Mail: " REPT_ACCT
 
-	sudo echo 'cat /tmp/net-config | mutt -s Network Configuration '$REPT_ACCT'' | sudo tee -a /bin/CDPPi.sh
+	sudo echo "cat /tmp/net-config | mutt -s 'Network Configuration' $REPT_ACCT" | sudo tee -a /bin/CDPPi.sh
 
 fi
 
