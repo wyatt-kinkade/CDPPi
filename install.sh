@@ -138,7 +138,7 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 
 		elif [[ $DISTRO_FAM =~ rhel ]];then
 
-                sudo yum install python3 python3-pip gcc -y
+                sudo yum install python3 python3-pip python3-devel gcc -y
 	        sudo pip3 install slackclient
 
         else
@@ -168,7 +168,7 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 		client = slack.WebClient(token=SLACK_TOKEN)
 	
 		client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
-		' >> /bin/netinfo-to-slack.py 
+		' | sudo tee /bin/netinfo-to-slack.py 
 	
 		sudo chmod +x /bin/netinfo-to-slack.py
 
