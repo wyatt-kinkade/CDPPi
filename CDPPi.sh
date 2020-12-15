@@ -1,14 +1,14 @@
 #!/bin/bash
 
-sleep 75s
+IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
 
-CDPINFO=`/usr/sbin/lldpctl`
+CDPINFO=`sudo /usr/sbin/lldpctl`
 
 EXTERNALIP=`curl ifconfig.co`
 
-INTERNALIP=`ip addr | grep eth0 -A 3`
+INTERNALIP=`ip addr | grep $IF -A 3`
 
-DHCPSVR=`nmap --script broadcast-dhcp-discover -e eth0`
+DHCPSVR=`nmap --script broadcast-dhcp-discover -e $IF`
 
 echo "Current External IP address is $EXTERNALIP
 
@@ -24,5 +24,5 @@ Further DHCP Configuration information is
 
 $DHCPSVR
 
-" > /tmp/net-config
+" | sudo tee /tmp/net-config
 
