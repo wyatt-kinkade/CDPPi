@@ -152,22 +152,21 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 	
 		read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
 	
-		sudo echo '
-		#!/usr/bin/env python3
-	
-		import slack
-		import os
-		import sys
-	
-		SLACK_TOKEN='$SLACK_TOKEN'
-	
-		mystring = sys.stdin.read()
-		#mystring = ':dolphin:'
-	
-		client = slack.WebClient(token=SLACK_TOKEN)
-	
-		client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
-		' | sudo tee /bin/netinfo-to-slack.py 
+sudo echo '#!/usr/bin/env python3
+
+import slack
+import os
+import sys
+
+SLACK_TOKEN='$SLACK_TOKEN'
+
+mystring = sys.stdin.read()
+#mystring = ':dolphin:'
+
+client = slack.WebClient(token=SLACK_TOKEN)
+
+client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
+' | sudo tee /bin/netinfo-to-slack.py 
 	
 		sudo chmod +x /bin/netinfo-to-slack.py
 
@@ -194,7 +193,7 @@ if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
 
 fi
 
-sudo echo 'rm /tmp/net-config' | sudo tee -a /bin/CDPPi.sh
+sudo echo 'sudo rm /tmp/net-config' | sudo tee -a /bin/CDPPi.sh
 
 sudo chmod +x /bin/CDPPi.sh
 

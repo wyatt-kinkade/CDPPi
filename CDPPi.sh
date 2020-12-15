@@ -8,7 +8,7 @@ EXTERNALIP=`curl ifconfig.co`
 
 INTERNALIP=`ip addr | grep $IF -A 3`
 
-DHCPSVR=`nmap --script broadcast-dhcp-discover -e $IF`
+DHCPSVR=`sudo nmap --script broadcast-dhcp-discover -e $IF`
 
 echo "Current External IP address is $EXTERNALIP
 
