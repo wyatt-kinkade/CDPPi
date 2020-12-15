@@ -3,7 +3,6 @@
 EMAIL_USE=N
 SLACK_USE=N
 RASPI=H
-IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
 DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
 MUTT_RC=`sudo ls -al /root/.muttrc`
 CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
@@ -183,7 +182,7 @@ sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
 
 if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 
-	read -p "Email Account to Recieve E-Mail" REPT_ACCT
+	read -p "Email Account to Recieve E-Mail: " REPT_ACCT
 
 	sudo echo 'cat /tmp/net-config | mutt -s Network Configuration '$REPT_ACCT'' | sudo tee -a /bin/CDPPi.sh
 
@@ -241,6 +240,8 @@ if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
 		echo 'Network Manager May need to be installed'
 
         fi
+
+	IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
 
 	sudo echo '#!/usr/bin/env bash
 	
