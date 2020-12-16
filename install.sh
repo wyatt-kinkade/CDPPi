@@ -105,18 +105,16 @@ if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
 		read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
 	
 		echo 'set from = "'$MAIL_ACCT'"
-		set realname = "'$MAIL_ALIAS'"
-		
-		set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
-		set smtp_pass = "'$MAIL_PW'"
-		'  | sudo tee /root/.muttrc
+set realname = "'$MAIL_ALIAS'"
+set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
+set smtp_pass = "'$MAIL_PW'"
+'  | sudo tee /root/.muttrc
 
                 echo 'set from = "'$MAIL_ACCT'"
-                set realname = "'$MAIL_ALIAS'"
-
-                set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
-                set smtp_pass = "'$MAIL_PW'"
-                ' | tee ~/.muttrc
+set realname = "'$MAIL_ALIAS'"
+set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
+set smtp_pass = "'$MAIL_PW'"
+' | tee ~/.muttrc
 	
 	else
 	
