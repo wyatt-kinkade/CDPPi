@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
+IF=`ip route | grep "default" | awk {'print $5'}`
 
 CDPINFO=`sudo /usr/sbin/lldpctl`
 
