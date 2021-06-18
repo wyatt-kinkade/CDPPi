@@ -55,7 +55,7 @@ if [ $EMAIL_USE = "Y" ]; then
 
                 sudo apt install mutt -y
 
-        if sudo bash -c '[ ! -f /root/.muttrc ]'; then
+        if [ ! -f ~/.muttrc ]; then
 
                 echo 'Configuring .muttrc, Further Information is needed'
 
@@ -70,12 +70,6 @@ if [ $EMAIL_USE = "Y" ]; then
                 read -p 'SMTP Server Address: ' SMTP_SRV
 
                 read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
-
-                echo 'set from = "'$MAIL_ACCT'"
-set realname = "'$MAIL_ALIAS'"
-set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
-set smtp_pass = "'$MAIL_PW'"
-'  | sudo tee /root/.muttrc
 
                 echo 'set from = "'$MAIL_ACCT'"
 set realname = "'$MAIL_ALIAS'"
@@ -132,6 +126,7 @@ fi
 
 echo "Installing Discovery Script"
 
+sudo rm /bin/CDPPi.sh
 sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
 
 if [ $EMAIL_USE = "Y" ]; then
@@ -157,9 +152,9 @@ sudo chmod +x /bin/CDPPi.sh
 if [ ! -v $CRON ]; then
 
         #write out current crontab
-        sudo crontab -l > ./mycron
+        crontab -l > ./mycron
         #echo new cron into cron file
-        sudo echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
+        echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
         #install new cron file
         sudo cat ./mycron | sudo crontab -
         rm ./mycron
