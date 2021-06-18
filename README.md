@@ -10,6 +10,6 @@ Just a simple set of scripts to install and configure CDPPi.
 ```
 git clone https://github.com/wyatt-kinkade/CDPPi.git
 cd CDPPi/
-chmod +x .install.sh
+chmod +x ./install.sh
 ```
 
