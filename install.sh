@@ -23,10 +23,6 @@ read -p "Do you wish to send responses via slack API? (y/n) " SLACK_INPUT
 done
 SLACK_USE=${SLACK_INPUT^^}
 
-echo "$EMAIL_USE"
-echo "$SLACK_USE"
-
-#if [ $EMAIL_USE == "N" -a $SLACK_USE == "N" ]; then
 if [ $EMAIL_USE == "N" ] && [ $SLACK_USE == "N" ]; then
 
 printf "No notifications are to be sent, Ending Script \n" ; exit
