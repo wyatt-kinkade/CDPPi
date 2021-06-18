@@ -111,7 +111,7 @@ import os
 import sys
 
 SLACK_TOKEN='$SLACK_TOKEN'
-SLACK_CHANNEL='$SLACK_CHAN'
+SLACK_CHAN='$SLACK_CHAN'
 mystring = sys.stdin.read()
 
 client = slack.WebClient(token=SLACK_TOKEN)
