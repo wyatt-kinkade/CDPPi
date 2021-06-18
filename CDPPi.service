@@ -1,0 +1,15 @@
+[Unit]
+Description=CDPPi Discovery Task
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+ExecStartPre=/bin/sleep 30
+ExecStart=/bin/CDPPi.sh
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi
+Restart=on-failure
+
