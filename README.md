@@ -3,7 +3,9 @@ Network Discovery Tool to be Deployed to a Raspberry Pi, this isn't exactly a fa
 
 Just a simple set of scripts to install and configure CDPPi.
 
+This Auto-Installer script is intended for use with Raspbian
 
+For alternative distros read Alt-Distro-readme.txt
 
 # Installation
 
