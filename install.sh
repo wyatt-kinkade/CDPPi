@@ -1,6 +1,5 @@
 #!/bin/bash
 
-IF=`ip route | grep "default" | awk {'print $5'}`
 DISTRO=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
 CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 
@@ -155,7 +154,7 @@ sudo chmod +x /bin/CDPPi.sh
 
 #Install Cron entry if none exists if Raspberry Pi
 
-if [ ! -v $CRON = '@reboot /bin/bash CDPPi.sh' ]; then
+if [ ! -v $CRON ]; then
 
         #write out current crontab
         sudo crontab -l > ./mycron
