@@ -1,7 +1,6 @@
 #!/bin/bash
 
 DISTRO=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
-CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 
 #Fail if not Raspian
 if [ $DISTRO != "raspbian" ]; then
@@ -143,20 +142,8 @@ sudo echo 'sudo rm /tmp/net-config' | sudo tee -a /bin/CDPPi.sh
 
 sudo chmod +x /bin/CDPPi.sh
 
-#Install Cron entry if none exists if Raspberry Pi
+#Configure CDPPi Systemd Service
+sudo cp ./CDPPi.service /lib/systemd/system/CDPPi.service
+sudo systemctl daemon-reload
+sudo systemctl enable CDPPi --now
 
-if [ ! -v $CRON ]; then
-
-        #write out current crontab
-        crontab -l > ./mycron
-        #echo new cron into cron file
-        echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
-        #install new cron file
-        sudo cat ./mycron | sudo crontab -
-        rm ./mycron
-
-else
-
-        echo "crontab entry exists"
-
-fi
