@@ -116,7 +116,7 @@ mystring = sys.stdin.read()
 
 client = slack.WebClient(token=SLACK_TOKEN)
 
-client.chat_postMessage(channel='SLACK_CHAN', text= mystring)
+client.chat_postMessage(channel=SLACK_CHAN, text= mystring)
 " | sudo tee /bin/netinfo-to-slack.py
 
     sudo chmod +x /bin/netinfo-to-slack.py
