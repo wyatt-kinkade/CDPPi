@@ -55,9 +55,9 @@ if [ $EMAIL_USE = "Y" ]; then
 
                 sudo apt install mutt -y
 
-        if [[ ! -f /root/.muttrc ]]; then
+        if sudo bash -c '[ ! -f /root/.muttrc ]'; then
 
-                sudo echo 'Configuring .muttrc, Further Information is needed'
+                echo 'Configuring .muttrc, Further Information is needed'
 
                 read -p 'E-Mail Address: ' MAIL_ACCT
 
