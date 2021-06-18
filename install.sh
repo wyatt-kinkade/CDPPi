@@ -1,65 +1,44 @@
 #!/bin/bash
 
-EMAIL_USE=N
-SLACK_USE=N
-RASPI=H
-DISTRO_FAM=`cat /etc/os-release | grep ID_LIKE | cut -d '=' -f 2`
-MUTT_RC=`sudo ls -al /root/.muttrc`
+DISTRO=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
 CRON=`crontab -l | grep '@reboot /bin/bash CDPPi.sh'`
 
-read -p "Do you wish to send responses via email? (y/N) " EMAIL_USE
+#Fail if not Raspian
+if [ $DISTRO != "raspbian" ]; then
 
-read -p "Do you wish to send responses via slack API? (y/N) " SLACK_USE
+printf "unsupported distribution, manual instructions are in readme.txt \n"
 
-read -p "Is this installation for a Raspberry Pi? (y/n/Help) " RASPI
-
-if [ \( "$RASPI" = h \) -o \( "$RASPI" = H \) ]; then
-
-	echo "Raspberry Pi Installs Trigger Script on boot 
-Non-Raspberry Pi Installations Trigger Script on interface activation"
-
-	read -p "Is this installation for a Raspberry Pi? (Y/n) " RASPI
+exit
 
 fi
 
+#Basic Checks
+while [ -z $EMAIL_INPUT ]; do
+read -p "Do you wish to send responses via email? (y/n) " EMAIL_INPUT
+done
+EMAIL_USE=${EMAIL_INPUT^^}
+
+while [ -z $SLACK_INPUT ]; do
+read -p "Do you wish to send responses via slack API? (y/n) " SLACK_INPUT
+done
+SLACK_USE=${SLACK_INPUT^^}
+
+echo "$EMAIL_USE"
+echo "$SLACK_USE"
+
+#if [ $EMAIL_USE == "N" -a $SLACK_USE == "N" ]; then
+if [ $EMAIL_USE == "N" ] && [ $SLACK_USE == "N" ]; then
+
+printf "No notifications are to be sent, Ending Script \n" ; exit
+
+fi
+
+#Install packages that are needed regardless
 echo "Updating Repositories and Installing Globally Needed Applications"
 
-if [ -z "$DISTRO_FAM" ];then
-	DISTRO_FAM=`cat /etc/os-release | grep ID | grep -v _ | cut -d '=' -f 2`
-fi
+sudo apt update -y
+sudo apt install lldpd nmap curl -y
 
-if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
-
-	if [ $DISTRO_FAM == "debian" ];then
-	
-		sudo apt update -y
-		sudo apt install lldpd nmap curl -y 
-	
-	else 
-	
-		echo 'Need to Configure Support for your Distribution 1'
-	
-	fi
-
-else
-
-        if [[ $DISTRO_FAM = 'debian' ]];then
-
-                sudo apt update -y
-                sudo apt install lldpd nmap curl -y
-
-	elif [[ $DISTRO_FAM =~ rhel ]];then
-
-		sudo yum install lldpd nmap curl -y
-
-	else
-
-		echo $DISTRO_FAM
-                echo 'Need to Configure Support for your Distribution 2'
-
-        fi
-
-fi
 
 #Copies Saved LLDPD Service File to Service File Location
 
@@ -72,39 +51,27 @@ sudo systemctl restart lldpd
 
 #Install/Configure Mail Client
 
-if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
-
-        if [[ $DISTRO_FAM == "debian" ]];then
+if [ $EMAIL_USE = "Y" ]; then
 
                 sudo apt install mutt -y
 
-	elif [[ $DISTRO_FAM =~ rhel ]];then
+        if [[ ! -f /root/.muttrc ]]; then
 
-                sudo yum install mutt -y
+                sudo echo 'Configuring .muttrc, Further Information is needed'
 
-        else
+                read -p 'E-Mail Address: ' MAIL_ACCT
 
-                echo 'Need to Configure Support for your Distribution'
+                read -p 'Friendly Mail Name (Bob Smith Raspberry Pi): ' MAIL_ALIAS
 
-        fi
+                read -p 'Enter Password: ' -s MAIL_PW
 
-	if [[ -z "$MUTT_RC" ]]; then
-	
-		sudo echo 'Configuring .muttrc, Further Information is needed'
-	
-		read -p 'E-Mail Address: ' MAIL_ACCT
-	
-		read -p 'Friendly Mail Name (Bob Smith Raspberry Pi): ' MAIL_ALIAS
-	
-		read -p 'Enter Password: ' -s MAIL_PW 
-	
-		echo " "
-	
-		read -p 'SMTP Server Address: ' SMTP_SRV
-	
-		read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
-	
-		echo 'set from = "'$MAIL_ACCT'"
+                echo " "
+
+                read -p 'SMTP Server Address: ' SMTP_SRV
+
+                read -p 'SMTP Port Number (Typically 587): ' SMTP_PORT
+
+                echo 'set from = "'$MAIL_ACCT'"
 set realname = "'$MAIL_ALIAS'"
 set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
 set smtp_pass = "'$MAIL_PW'"
@@ -115,60 +82,50 @@ set realname = "'$MAIL_ALIAS'"
 set smtp_url = "smtp://'$MAIL_ACCT'@'$SMTP_SRV':'$SMTP_PORT'/"
 set smtp_pass = "'$MAIL_PW'"
 ' | tee ~/.muttrc
-	
-	else
-	
-		echo '.muttrc Already Configured'
-	
-	fi
+
+        else
+
+                echo '.muttrc Already Configured for root user, further configuration may be required, Delete file to recreate it with this script if needed, or edit the file manually'
+
+        fi
 
 fi
 
 #NEED SAFETY CHECK TO NOT MAKE MUTTRC IF ONE EXISTS
 
-if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
+if [ $SLACK_USE = "Y" ]; then
 
-        if [[ $DISTRO_FAM == "debian" ]];then
+sudo apt install python3 python3-pip gcc -y
+sudo pip3 install slackclient
 
-                sudo apt install python3 python3-pip gcc -y
-                sudo pip3 install slackclient
+    if [ ! -f /bin/netinfo-to-slack.py ]; then
 
-		elif [[ $DISTRO_FAM =~ rhel ]];then
+    read -p "Provide Slack Token: " SLACK_TOKEN
 
-                sudo yum install python3 python3-pip python3-devel gcc -y
-	        sudo pip3 install slackclient
+    read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
 
-        else
-
-                echo 'Need to Configure Support for your Distribution'
-
-        fi
-
-	if [ ! -f /bin/netinfo-to-slack.py ]; then
-
-		read -p "Provide Slack Token: " SLACK_TOKEN
-	
-		read -p "Provide Channel/User to respond to (For Example #general or @walt-smith): " SLACK_CHAN
-	
-sudo echo "#!/usr/bin/env python3
+    echo "#!/usr/bin/env python3
 
 import slack
 import os
 import sys
 
 SLACK_TOKEN='$SLACK_TOKEN'
-
+SLACK_CHANNEL='$SLACK_CHAN'
 mystring = sys.stdin.read()
-#mystring = ':dolphin:'
 
 client = slack.WebClient(token=SLACK_TOKEN)
 
-client.chat_postMessage(channel='$SLACK_CHAN', text= mystring)
-" | sudo tee /bin/netinfo-to-slack.py 
-	
-		sudo chmod +x /bin/netinfo-to-slack.py
+client.chat_postMessage(channel='SLACK_CHAN', text= mystring)
+" | sudo tee /bin/netinfo-to-slack.py
 
-	fi
+    sudo chmod +x /bin/netinfo-to-slack.py
+
+    else
+
+    printf "If you need to change slack token or channel, please delete /bin/netinfo-to-slack.py and run this script again or manually edit the file with your preferred text editor"
+
+    fi
 fi
 
 #Install Script
@@ -177,17 +134,17 @@ echo "Installing Discovery Script"
 
 sudo cp -R ./CDPPi.sh /bin/CDPPi.sh
 
-if [ \( "$EMAIL_USE" = Y \) -o \( "$EMAIL_USE" = y \) ]; then
+if [ $EMAIL_USE = "Y" ]; then
 
-	read -p "Email Account to Recieve E-Mail: " REPT_ACCT
+        read -p "Email Account to Recieve E-Mail: " REPT_ACCT
 
-	sudo echo "cat /tmp/net-config | mutt -s 'Network Configuration' $REPT_ACCT" | sudo tee -a /bin/CDPPi.sh
+        sudo echo "cat /tmp/net-config | mutt -s 'Network Configuration' $REPT_ACCT" | sudo tee -a /bin/CDPPi.sh
 
 fi
 
-if [ \( "$SLACK_USE" = Y \) -o \( "$SLACK_USE" = y \) ]; then
+if [ $SLACK_USE = "Y" ]; then
 
-	sudo echo 'cat /tmp/net-config | /bin/netinfo-to-slack.py' | sudo tee -a /bin/CDPPi.sh 
+        sudo echo 'cat /tmp/net-config | /bin/netinfo-to-slack.py' | sudo tee -a /bin/CDPPi.sh
 
 fi
 
@@ -197,61 +154,18 @@ sudo chmod +x /bin/CDPPi.sh
 
 #Install Cron entry if none exists if Raspberry Pi
 
-if [ \( "$RASPI" = Y \) -o \( "$RASPI" = y \) ]; then
+if [ ! -v $CRON = '@reboot /bin/bash CDPPi.sh' ]; then
 
-	if [ ! -v $CRON = '@reboot /bin/bash CDPPi.sh' ]; then
-	
-		#write out current crontab
-		sudo crontab -l > ./mycron
-		#echo new cron into cron file
-		sudo echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
-		#install new cron file
-		sudo cat ./mycron | sudo crontab -
-		rm ./mycron
-	
-	else
-	
-		echo "crontab entry exists"
-	
-	fi
+        #write out current crontab
+        sudo crontab -l > ./mycron
+        #echo new cron into cron file
+        sudo echo "@reboot /bin/bash CDPPi.sh" >> ./mycron
+        #install new cron file
+        sudo cat ./mycron | sudo crontab -
+        rm ./mycron
 
-fi
+else
 
-#Configure Network Manager Dispatcher
-
-if [ \( "$RASPI" = N \) -o \( "$RASPI" = n \) ]; then
-
-	if [ "$DISTRO_FAM" = debian ];then
-
-                sudo apt install network-manager -y
-		sudo sed -i 's/^\([^#].*\)/# \1/g' /etc/network/interfaces
-		sudo sed -i 's/false/true/g' /etc/NetworkManager/NetworkManager.conf
-		sudo systemctl restart NetworkManager
-
-	elif [[ $DISTRO_FAM =~ rhel ]];then
-
-                echo 'No need to Install Network Manager'
-
-	else
-	
-		echo 'Network Manager May need to be installed'
-
-        fi
-
-	IF=`nmcli conn | grep ethernet | grep -v '\-\-' | awk '{print $1;}'`
-
-	sudo echo '#!/usr/bin/env bash
-	
-	interface=$1
-	event=$2
-	
-	if [[ $interface != "'$IF'" ]] || [[ $event != "up" ]]
-	then
-	  return 0
-	fi
-	
-	sleep 75 && /bin/CDPPi.sh' | sudo tee /etc/NetworkManager/dispatcher.d/88-net-info
-	sudo chmod +x /etc/NetworkManager/dispatcher.d/88-net-info
-	sudo systemctl restart NetworkManager
+        echo "crontab entry exists"
 
 fi
