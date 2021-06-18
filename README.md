@@ -5,7 +5,7 @@ Just a simple set of scripts to install and configure CDPPi.
 
 This Auto-Installer script is intended for use with Raspbian
 
-For alternative distros read Alt-Distro-readme.txt
+For alternative distros you're free to make alterations to make it work as needed for them
 
 # Installation
 
